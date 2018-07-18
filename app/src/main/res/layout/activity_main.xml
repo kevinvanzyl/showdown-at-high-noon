@@ -2,25 +2,54 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0099cc"
-    tools:context="codes.kevinvanzyl.showdownathighnoon.MainActivity">
+    android:background="@color/blue_overlay"
+    tools:context="codes.kevinvanzyl.showdownathighnoon.activities.MainActivity">
 
     <!-- The primary full-screen view. This can be replaced with whatever view
          is needed to present your content, e.g. VideoView, SurfaceView,
          TextureView, etc. -->
-    <TextView android:id="@+id/fullscreen_content"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:keepScreenOn="true"
-        android:textColor="#33b5e5"
-        android:textStyle="bold"
-        android:textSize="50sp"
-        android:gravity="center"
-        android:text="@string/dummy_content" />
+    <!--<TextView android:id="@+id/fullscreen_content"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:keepScreenOn="true"-->
+        <!--android:textColor="#33b5e5"-->
+        <!--android:textStyle="bold"-->
+        <!--android:textSize="50sp"-->
+        <!--android:gravity="center"-->
+        <!--android:text="@string/dummy_content" />-->
+
+    <LinearLayout android:id="@+id/fullscreen_content"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_gravity="center_vertical|center_horizontal"
+                  android:orientation="vertical">
+
+        <Button android:id="@+id/button_single_player"
+                style="?metaButtonBarButtonStyle"
+                android:background="@color/black_overlay"
+                android:layout_margin="12dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/single_player" />
+
+        <Button android:id="@+id/button_multiplayer"
+                style="?metaButtonBarButtonStyle"
+                android:background="@color/black_overlay"
+                android:layout_margin="12dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/multiplayer" />
+
+    </LinearLayout>
+
+
 
     <!-- This FrameLayout insets its children based on system windows using
          android:fitsSystemWindows. -->
-    <FrameLayout android:layout_width="match_parent"
+    <FrameLayout
+        android:visibility="gone"
+        android:id="@+id/fullscreen_content_controls_overlay"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fitsSystemWindows="true">
 
@@ -33,12 +62,12 @@
             android:orientation="horizontal"
             tools:ignore="UselessParent">
 
-            <Button android:id="@+id/dummy_button"
+            <Button android:id="@+id/button_control_1"
                 style="?metaButtonBarButtonStyle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/dummy_button" />
+                android:text="@string/exit" />
 
         </LinearLayout>
     </FrameLayout>

@@ -1,4 +1,4 @@
-package codes.kevinvanzyl.showdownathighnoon;
+package codes.kevinvanzyl.showdownathighnoon.activities;
 
 import android.annotation.SuppressLint;
 import android.support.v7.app.ActionBar;
@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
+
+import codes.kevinvanzyl.showdownathighnoon.R;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -35,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
     private View mControlsView;
     private boolean mVisible;
 
+    private boolean playing = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,14 +54,17 @@ public class MainActivity extends AppCompatActivity {
         mContentView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                toggle();
+
+                if (playing) {
+                    toggle();
+                }
             }
         });
 
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
-        findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
+//        findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
     }
 
     @Override
@@ -164,5 +171,11 @@ public class MainActivity extends AppCompatActivity {
     private void delayedHide(int delayMillis) {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        hide();
     }
 }
