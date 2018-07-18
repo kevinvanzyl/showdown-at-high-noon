@@ -11,6 +11,8 @@ import android.view.View;
 import android.widget.Button;
 
 import codes.kevinvanzyl.showdownathighnoon.R;
+import codes.kevinvanzyl.showdownathighnoon.activities.multiplayer.MultiplayerActivity;
+import codes.kevinvanzyl.showdownathighnoon.activities.single_player.SinglePlayerActivity;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -50,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
         mContentView = findViewById(R.id.fullscreen_content);
 
         hide();
-        
+
         btnSinglePlayer = (Button) findViewById(R.id.button_single_player);
         btnMultiplayer = (Button) findViewById(R.id.button_multiplayer);
 

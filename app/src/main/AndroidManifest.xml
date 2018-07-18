@@ -29,17 +29,24 @@
             android:screenOrientation="landscape"
             android:theme="@style/FullscreenTheme"/>
         <activity
-            android:name=".activities.SinglePlayerActivity"
+            android:name=".activities.single_player.SinglePlayerActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
-            android:screenOrientation="landscape"
             android:label="@string/title_activity_single_player"
+            android:screenOrientation="landscape"
             android:theme="@style/FullscreenTheme">
         </activity>
         <activity
-            android:name=".activities.MultiplayerActivity"
+            android:name=".activities.multiplayer.MultiplayerActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
-            android:screenOrientation="landscape"
             android:label="@string/title_activity_multiplayer"
+            android:screenOrientation="landscape"
+            android:theme="@style/FullscreenTheme">
+        </activity>
+        <activity
+            android:name=".activities.single_player.SinglePlayerGameActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_single_player_game"
+            android:screenOrientation="landscape"
             android:theme="@style/FullscreenTheme">
         </activity>
     </application>

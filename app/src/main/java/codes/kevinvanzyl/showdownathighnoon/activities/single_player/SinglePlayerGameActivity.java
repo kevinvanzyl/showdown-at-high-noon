@@ -1,4 +1,4 @@
-package codes.kevinvanzyl.showdownathighnoon.activities;
+package codes.kevinvanzyl.showdownathighnoon.activities.single_player;
 
 import android.annotation.SuppressLint;
 import android.support.v7.app.ActionBar;
@@ -14,7 +14,7 @@ import codes.kevinvanzyl.showdownathighnoon.R;
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class SinglePlayerActivity extends AppCompatActivity {
+public class SinglePlayerGameActivity extends AppCompatActivity {
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -51,7 +51,6 @@ public class SinglePlayerActivity extends AppCompatActivity {
                     | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
         }
     };
-    private View mControlsView;
     private final Runnable mShowPart2Runnable = new Runnable() {
         @Override
         public void run() {
@@ -60,7 +59,6 @@ public class SinglePlayerActivity extends AppCompatActivity {
             if (actionBar != null) {
                 actionBar.show();
             }
-            mControlsView.setVisibility(View.VISIBLE);
         }
     };
     private boolean mVisible;
@@ -89,11 +87,11 @@ public class SinglePlayerActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_single_player);
+        setContentView(R.layout.activity_single_player_game);
 
         mVisible = true;
-        mControlsView = findViewById(R.id.fullscreen_content_controls);
         mContentView = findViewById(R.id.fullscreen_content);
+
 
         // Set up the user interaction to manually show or hide the system UI.
         mContentView.setOnClickListener(new View.OnClickListener() {
@@ -102,11 +100,6 @@ public class SinglePlayerActivity extends AppCompatActivity {
                 toggle();
             }
         });
-
-        // Upon interacting with UI controls, delay any scheduled hide()
-        // operations to prevent the jarring behavior of controls going away
-        // while interacting with the UI.
-//        findViewById(R.id.button_begin_game).setOnTouchListener(mDelayHideTouchListener);
     }
 
     @Override
@@ -116,7 +109,7 @@ public class SinglePlayerActivity extends AppCompatActivity {
         // Trigger the initial hide() shortly after the activity has been
         // created, to briefly hint to the user that UI controls
         // are available.
-        delayedHide(1);
+        delayedHide(100);
     }
 
     private void toggle() {
@@ -133,7 +126,6 @@ public class SinglePlayerActivity extends AppCompatActivity {
         if (actionBar != null) {
             actionBar.hide();
         }
-        mControlsView.setVisibility(View.GONE);
         mVisible = false;
 
         // Schedule a runnable to remove the status and navigation bar after a delay
