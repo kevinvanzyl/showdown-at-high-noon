@@ -117,11 +117,6 @@ public class SinglePlayerActivity extends AppCompatActivity {
                 overridePendingTransition(R.animator.slidein_right, R.animator.slideout_right);
             }
         });
-
-        // Upon interacting with UI controls, delay any scheduled hide()
-        // operations to prevent the jarring behavior of controls going away
-        // while interacting with the UI.
-//        findViewById(R.id.button_begin_game).setOnTouchListener(mDelayHideTouchListener);
     }
 
     @Override

@@ -89,4 +89,22 @@
         android:textSize="80sp"
         android:textStyle="bold"/>
 
+    <LinearLayout
+        android:id="@+id/layout_image_arrow"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        android:gravity="center"
+        android:keepScreenOn="true"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/image_arrow"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            />
+
+    </LinearLayout>
+
+
 </FrameLayout>

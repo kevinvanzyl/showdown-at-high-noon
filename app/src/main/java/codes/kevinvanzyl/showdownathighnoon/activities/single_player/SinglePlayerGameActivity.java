@@ -1,12 +1,29 @@
 package codes.kevinvanzyl.showdownathighnoon.activities.single_player;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.media.Image;
+import android.os.CountDownTimer;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
+import android.view.OrientationEventListener;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import org.w3c.dom.Text;
+
+import java.util.Random;
 
 import codes.kevinvanzyl.showdownathighnoon.R;
 
@@ -14,7 +31,7 @@ import codes.kevinvanzyl.showdownathighnoon.R;
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class SinglePlayerGameActivity extends AppCompatActivity {
+public class SinglePlayerGameActivity extends AppCompatActivity implements SensorEventListener {
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -32,7 +49,13 @@ public class SinglePlayerGameActivity extends AppCompatActivity {
      * and a change of the status and navigation bar.
      */
     private static final int UI_ANIMATION_DELAY = 300;
+    private static final int DIRECTION_UP = 0;
+    private static final int DIRECTION_DOWN = 1;
+    private static final int DIRECTION_LEFT = 2;
+    private static final int DIRECTION_RIGHT = 3;
+    private static final int DIRECTION_NONE = -1;
     private final Handler mHideHandler = new Handler();
+    private final Handler countdownHandler = new Handler();
     private View mContentView;
     private final Runnable mHidePart2Runnable = new Runnable() {
         @SuppressLint("InlinedApi")
@@ -83,6 +106,21 @@ public class SinglePlayerGameActivity extends AppCompatActivity {
         }
     };
 
+    private TextView txtCountDown;
+    private TextView txtRoundNumber;
+    private TextView txtScore;
+    private LinearLayout layoutArrow;
+    private ImageView imgArrow;
+
+    private int roundNumber = 0;
+    private int currentDirection = DIRECTION_NONE;
+    private int score = 0;
+    private float[] mGravity;
+    private float[] mGeomagnetic;
+    private float azimut;
+    private float pitch;
+    private float roll;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -92,6 +130,12 @@ public class SinglePlayerGameActivity extends AppCompatActivity {
         mVisible = true;
         mContentView = findViewById(R.id.fullscreen_content);
 
+        txtCountDown = (TextView) findViewById(R.id.text_countdown);
+        txtRoundNumber = (TextView) findViewById(R.id.text_round_number);
+        txtScore = (TextView) findViewById(R.id.text_score);
+
+        layoutArrow = (LinearLayout) findViewById(R.id.layout_image_arrow);
+        imgArrow = (ImageView) findViewById(R.id.image_arrow);
 
         // Set up the user interaction to manually show or hide the system UI.
         mContentView.setOnClickListener(new View.OnClickListener() {
@@ -100,6 +144,199 @@ public class SinglePlayerGameActivity extends AppCompatActivity {
                 toggle();
             }
         });
+
+        startCountDown();
+    }
+
+    private void startCountDown() {
+
+        new CountDownTimer(4000, 1000) {
+
+            public void onTick(long millisUntilFinished) {
+                txtCountDown.setText("" + millisUntilFinished / 1000);
+            }
+
+            public void onFinish() {
+                //txtCountDown.setVisibility(View.GONE);
+                playGame();
+            }
+        }.start();
+    }
+
+    private void playGame() {
+        if (roundNumber < 10) {
+
+            nextRound();
+        }
+    }
+
+    private void nextRound() {
+
+        roundNumber++;
+        txtRoundNumber.setText(""+roundNumber);
+
+        Random r = new Random();
+        int random = r.nextInt(9 - 2) + 2; //random number from 2 to 8 inclusive
+
+        final int randomDirection = r.nextInt(4);
+        final int arrowDrawable = getArrowDrawable(randomDirection);
+
+        countdownHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                layoutArrow.setVisibility(View.VISIBLE);
+                imgArrow.setImageResource(arrowDrawable);
+
+                SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+                Sensor accSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+                Sensor magSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+                currentDirection = DIRECTION_NONE;
+
+                sensorManager.registerListener(SinglePlayerGameActivity.this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
+                sensorManager.registerListener(SinglePlayerGameActivity.this, magSensor, SensorManager.SENSOR_DELAY_NORMAL);
+
+                new CountDownTimer(1000, 50) {
+
+                    public void onTick(long millisUntilFinished) {
+                        if (currentDirection == randomDirection) {
+                            this.cancel();
+                            roundWon();
+                        }
+                    }
+
+                    public void onFinish() {
+
+                        roundLost();
+                    }
+                }.start();
+            }
+        }, random*1000);
+    }
+
+    private void roundLost() {
+
+        layoutArrow.setVisibility(View.GONE);
+        imgArrow.setImageDrawable(null);
+
+        txtCountDown.setVisibility(View.VISIBLE);
+        txtCountDown.setTextColor(ContextCompat.getColor(this, R.color.colorAccent));
+        //txtCountDown.setText("You Lost!");
+        countdownHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                //txtCountDown.setVisibility(View.GONE);
+                playGame();
+            }
+        }, 2000);
+    }
+
+    private void roundWon() {
+
+        score++;
+        txtScore.setText(score+"");
+
+        layoutArrow.setVisibility(View.GONE);
+        imgArrow.setImageDrawable(null);
+
+        txtCountDown.setVisibility(View.VISIBLE);
+        txtCountDown.setTextColor(ContextCompat.getColor(this, R.color.blue_heading));
+        //txtCountDown.setText("You Won!");
+        countdownHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                //txtCountDown.setVisibility(View.GONE);
+                playGame();
+            }
+        }, 2000);
+    }
+
+    public int getArrowDrawable(int direction) {
+
+        if (direction == DIRECTION_UP) {
+            return R.drawable.ic_arrow_upward_accent_24dp;
+        }
+        else if (direction == DIRECTION_DOWN) {
+            return R.drawable.ic_arrow_downward_accent_24dp;
+        }
+        else if (direction == DIRECTION_LEFT) {
+            return R.drawable.ic_arrow_back_accent_24dp;
+        }
+        else {
+            return R.drawable.ic_arrow_forward_accent_24dp;
+        }
+    }
+
+    public String getDirectionString(int direction) {
+
+        if (direction == DIRECTION_UP) {
+            return "Up";
+        }
+        else if (direction == DIRECTION_DOWN) {
+            return "Down";
+        }
+        else if (direction == DIRECTION_LEFT) {
+            return "Left";
+        }
+        else if (direction == DIRECTION_RIGHT) {
+            return "Right";
+        }
+        else {
+            return "None";
+        }
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
+            mGravity = event.values;
+
+        if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
+            mGeomagnetic = event.values;
+
+        if (mGravity != null && mGeomagnetic != null) {
+            float R[] = new float[9];
+            float I[] = new float[9];
+
+            boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
+            if (success) {
+                float orientation[] = new float[3];
+                SensorManager.getOrientation(R, orientation);
+                azimut = orientation[0]; // orientation contains: azimut, pitch and roll
+                pitch = orientation[1];
+                roll = orientation[2];
+            }
+        }
+
+        txtCountDown.setTextSize(23);
+        txtCountDown.setText("Pitch: "+Math.toDegrees(pitch)+"\nRoll: "+Math.toDegrees(roll)+"\nAzimut: "+Math.toDegrees(azimut));
+
+        float x = event.values[0];
+        float y = event.values[1];
+        if (Math.abs(x) > Math.abs(y)) {
+            if (x < 0) {
+
+                currentDirection = DIRECTION_UP;
+            }
+            if (x > 0) {
+                currentDirection = DIRECTION_DOWN;
+            }
+        } else {
+            if (y < 0) {
+                currentDirection = DIRECTION_LEFT;
+            }
+            if (y > 0) {
+                currentDirection = DIRECTION_RIGHT;
+            }
+        }
+        if (x > (-2) && x < (2) && y > (-2) && y < (2)) {
+
+            currentDirection = DIRECTION_NONE;
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor arg0, int arg1) {
     }
 
     @Override
