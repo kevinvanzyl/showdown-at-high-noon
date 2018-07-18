@@ -10,4 +10,7 @@
     <string name="title_activity_single_player">Single Player</string>
 
     <string name="title_activity_multiplayer">Multiplayer</string>
+    <string name="single_player_instructions">After the 3 second countdown, the game begins. There are 10 rounds. Each round, an arrow will display in one of four directions. Tilt your device in the direction of the arrow within a second of seeing it to score the point for the round.\n\nTouch the screen to bring up the controls and begin the game.</string>
+    <string name="single_player_heading">Instructions</string>
+    <string name="begin_game">Begin Game</string>
 </resources>

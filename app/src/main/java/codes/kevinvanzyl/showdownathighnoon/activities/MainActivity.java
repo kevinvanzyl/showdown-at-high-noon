@@ -33,14 +33,12 @@ public class MainActivity extends AppCompatActivity {
      * Some older devices needs a small delay between UI widget updates
      * and a change of the status and navigation bar.
      */
-    private static final int UI_ANIMATION_DELAY = 300;
+    private static final int UI_ANIMATION_DELAY = 1;
 
     private View mContentView;
-    private View mControlsView;
     private Button btnSinglePlayer;
     private Button btnMultiplayer;
     private boolean mVisible;
-    private boolean playing = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,8 +47,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mVisible = true;
-        mControlsView = findViewById(R.id.fullscreen_content_controls);
         mContentView = findViewById(R.id.fullscreen_content);
+
+        hide();
+        
         btnSinglePlayer = (Button) findViewById(R.id.button_single_player);
         btnMultiplayer = (Button) findViewById(R.id.button_multiplayer);
 
@@ -71,22 +71,6 @@ public class MainActivity extends AppCompatActivity {
                 overridePendingTransition(R.animator.slidein_right, R.animator.slideout_right);
             }
         });
-
-        // Set up the user interaction to manually show or hide the system UI.
-        mContentView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                if (playing) {
-                    toggle();
-                }
-            }
-        });
-
-        // Upon interacting with UI controls, delay any scheduled hide()
-        // operations to prevent the jarring behavior of controls going away
-        // while interacting with the UI.
-//        findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
     }
 
     @Override
@@ -96,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
         // Trigger the initial hide() shortly after the activity has been
         // created, to briefly hint to the user that UI controls
         // are available.
-        delayedHide(100);
+//        delayedHide(1);
     }
 
     /**
@@ -128,7 +112,6 @@ public class MainActivity extends AppCompatActivity {
         if (actionBar != null) {
             actionBar.hide();
         }
-        mControlsView.setVisibility(View.GONE);
         mVisible = false;
 
         // Schedule a runnable to remove the status and navigation bar after a delay
@@ -174,7 +157,6 @@ public class MainActivity extends AppCompatActivity {
             if (actionBar != null) {
                 actionBar.show();
             }
-            mControlsView.setVisibility(View.VISIBLE);
         }
     };
 
