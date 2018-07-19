@@ -121,6 +121,10 @@ public class SinglePlayerGameActivity extends AppCompatActivity implements Senso
     private float pitch;
     private float roll;
 
+    SensorManager sensorManager;
+    Sensor accSensor;
+    Sensor magSensor;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -145,6 +149,10 @@ public class SinglePlayerGameActivity extends AppCompatActivity implements Senso
             }
         });
 
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        accSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        magSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+
         startCountDown();
     }
 
@@ -157,7 +165,7 @@ public class SinglePlayerGameActivity extends AppCompatActivity implements Senso
             }
 
             public void onFinish() {
-                //txtCountDown.setVisibility(View.GONE);
+                txtCountDown.setVisibility(View.GONE);
                 playGame();
             }
         }.start();
@@ -168,9 +176,23 @@ public class SinglePlayerGameActivity extends AppCompatActivity implements Senso
 
             nextRound();
         }
+        else {
+            txtCountDown.setVisibility(View.VISIBLE);
+            txtCountDown.setTextColor(ContextCompat.getColor(this, R.color.blue_heading));
+            txtCountDown.setText("Your final score is "+score);
+
+            countdownHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    finish();
+                }
+            }, 3000);
+        }
     }
 
     private void nextRound() {
+
+        Toast.makeText(this, "Round Started", Toast.LENGTH_SHORT).show();
 
         roundNumber++;
         txtRoundNumber.setText(""+roundNumber);
@@ -187,13 +209,8 @@ public class SinglePlayerGameActivity extends AppCompatActivity implements Senso
                 layoutArrow.setVisibility(View.VISIBLE);
                 imgArrow.setImageResource(arrowDrawable);
 
-                SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-                Sensor accSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-                Sensor magSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-                currentDirection = DIRECTION_NONE;
 
-                sensorManager.registerListener(SinglePlayerGameActivity.this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
-                sensorManager.registerListener(SinglePlayerGameActivity.this, magSensor, SensorManager.SENSOR_DELAY_NORMAL);
+                currentDirection = DIRECTION_NONE;
 
                 new CountDownTimer(1000, 50) {
 
@@ -220,11 +237,11 @@ public class SinglePlayerGameActivity extends AppCompatActivity implements Senso
 
         txtCountDown.setVisibility(View.VISIBLE);
         txtCountDown.setTextColor(ContextCompat.getColor(this, R.color.colorAccent));
-        //txtCountDown.setText("You Lost!");
+        txtCountDown.setText("You Lost!");
         countdownHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                //txtCountDown.setVisibility(View.GONE);
+                txtCountDown.setVisibility(View.GONE);
                 playGame();
             }
         }, 2000);
@@ -240,11 +257,11 @@ public class SinglePlayerGameActivity extends AppCompatActivity implements Senso
 
         txtCountDown.setVisibility(View.VISIBLE);
         txtCountDown.setTextColor(ContextCompat.getColor(this, R.color.blue_heading));
-        //txtCountDown.setText("You Won!");
+        txtCountDown.setText("You Won!");
         countdownHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                //txtCountDown.setVisibility(View.GONE);
+                txtCountDown.setVisibility(View.GONE);
                 playGame();
             }
         }, 2000);
@@ -308,25 +325,33 @@ public class SinglePlayerGameActivity extends AppCompatActivity implements Senso
             }
         }
 
-        txtCountDown.setTextSize(23);
-        txtCountDown.setText("Pitch: "+Math.toDegrees(pitch)+"\nRoll: "+Math.toDegrees(roll)+"\nAzimut: "+Math.toDegrees(azimut));
-
         float x = event.values[0];
         float y = event.values[1];
         if (Math.abs(x) > Math.abs(y)) {
             if (x < 0) {
 
-                currentDirection = DIRECTION_UP;
+                if (Math.toDegrees(roll) >= 50) {
+                    currentDirection = DIRECTION_UP;
+                }
             }
             if (x > 0) {
-                currentDirection = DIRECTION_DOWN;
+
+                if (Math.toDegrees(roll) <= -50) {
+                    currentDirection = DIRECTION_DOWN;
+                }
             }
         } else {
             if (y < 0) {
-                currentDirection = DIRECTION_LEFT;
+
+                if (Math.toDegrees(pitch) >= 50) {
+                    currentDirection = DIRECTION_LEFT;
+                }
             }
             if (y > 0) {
-                currentDirection = DIRECTION_RIGHT;
+
+                if (Math.toDegrees(pitch) <= -50) {
+                    currentDirection = DIRECTION_RIGHT;
+                }
             }
         }
         if (x > (-2) && x < (2) && y > (-2) && y < (2)) {
@@ -389,5 +414,18 @@ public class SinglePlayerGameActivity extends AppCompatActivity implements Senso
     private void delayedHide(int delayMillis) {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        sensorManager.registerListener(SinglePlayerGameActivity.this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(SinglePlayerGameActivity.this, magSensor, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sensorManager.unregisterListener(this);
     }
 }

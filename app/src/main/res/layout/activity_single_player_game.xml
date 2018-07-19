@@ -100,8 +100,8 @@
 
         <ImageView
             android:id="@+id/image_arrow"
-            android:layout_width="72dp"
-            android:layout_height="72dp"
+            android:layout_width="96dp"
+            android:layout_height="96dp"
             />
 
     </LinearLayout>
