@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">Showdown At High Noon</string>
 
+    <string name="google_play_games_app_id">396564310</string>
+
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="single_player">Single Player</string>
@@ -15,4 +17,6 @@
     <string name="begin_game">Begin Game</string>
 
     <string name="title_activity_single_player_game">Single Player</string>
+    <string name="sign_in_why">You must sign in with your google play account to play multiplayer in real time.</string>
+    <string name="signin_other_error">There was an issue with sign in. Please try again later.</string>
 </resources>

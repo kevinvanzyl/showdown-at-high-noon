@@ -1,18 +1,28 @@
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+        release {
+            keyAlias 'showdown_at_high_noon'
+            keyPassword 'k3v1n1234'
+            storeFile file('/home/kevin/Documents/showdown_at_high_noon.jks')
+            storePassword 'k3v1n1234'
+        }
+    }
     compileSdkVersion 26
     defaultConfig {
         applicationId "codes.kevinvanzyl.showdownathighnoon"
-        minSdkVersion 21
+        minSdkVersion 17
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"
+        vectorDrawables.useSupportLibrary = true
     }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
     buildToolsVersion '27.0.3'
@@ -22,4 +32,6 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:26.1.0'
     implementation 'com.android.support:support-v4:26.1.0'
+    implementation "com.google.android.gms:play-services-games:${gms_library_version}"
+    implementation "com.google.android.gms:play-services-auth:${gms_library_version}"
 }

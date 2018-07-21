@@ -16,7 +16,7 @@ public class SplashScreenActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setTheme(R.style.Theme_AppCompat_Light_NoActionBar_FullScreen);
+        setTheme(R.style.Theme_AppCompat);
         setContentView(R.layout.page_splash_screen);
 
         ActionBar actionBar = getSupportActionBar();
