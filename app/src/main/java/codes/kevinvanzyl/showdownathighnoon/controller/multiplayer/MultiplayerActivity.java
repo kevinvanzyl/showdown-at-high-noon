@@ -38,10 +38,7 @@ import com.google.android.gms.tasks.Task;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import codes.kevinvanzyl.showdownathighnoon.R;
 
@@ -55,8 +52,9 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
 
     private static final String MESSAGE_AGREE_ON_HOST = "AGREE_ON_HOST";
     private static final String MESSAGE_ROUND_DATA = "ROUND_DATA";
+    private static final String MESSAGE_CLAIM_WIN = "MESSAGE_CLAIM_WIN";
     private MultiplayerWaitingRoomFragment waitingRoomFragment;
-    private GameFragment gameFragment;
+    private MultiplayerFragment multiplayerFragment;
 
     /**
      * Whether or not the system UI should be auto-hidden after
@@ -253,8 +251,9 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
 
     private void playGame() {
 
-        gameFragment = GameFragment.newInstance(mMyParticipantId, hostParticipantId, clientParticipantId);
-        getSupportFragmentManager().beginTransaction().replace(R.id.fullscreen_content, gameFragment).commit();
+        multiplayerFragment = MultiplayerFragment.newInstance(mMyParticipantId, hostParticipantId, clientParticipantId);
+        getSupportFragmentManager().beginTransaction().replace(R.id.fullscreen_content, multiplayerFragment).commit();
+        multiplayerFragment.setRoom(mRoom);
     }
 
     public void startQuickGame(long role) {
@@ -364,7 +363,10 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
                     int randomDirection = Integer.valueOf(strArray[1]);
                     int randomDelay = Integer.valueOf(strArray[2]);
 
-                    gameFragment.handleRoundData(randomDirection, randomDelay);
+                    multiplayerFragment.handleRoundData(randomDirection, randomDelay);
+                }
+                else if (message.contains(MESSAGE_CLAIM_WIN)) {
+                    multiplayerFragment.handleLoss();
                 }
             }
         }
@@ -604,9 +606,30 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
         String message = MESSAGE_ROUND_DATA+";"+randomDirection+";"+randomDelay;
         ArrayList<String> participantIds = mRoom.getParticipantIds();
 
-        for (String pId: participantIds) {
-            Games.getRealTimeMultiplayerClient(MultiplayerActivity.this, GoogleSignIn.getLastSignedInAccount(MultiplayerActivity.this))
-                .sendUnreliableMessage(message.getBytes(), mRoom.getRoomId(), pId)
+        //Unreliable message is more real time than reliable
+        Games.getRealTimeMultiplayerClient(MultiplayerActivity.this, GoogleSignIn.getLastSignedInAccount(MultiplayerActivity.this))
+            .sendUnreliableMessageToOthers(message.getBytes(), mRoom.getRoomId())
+            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void aVoid) {
+                    Log.d(TAG, "Created a unreliable message");
+                }
+            })
+            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    multiplayerFragment.handleRoundData(randomDirection, randomDelay);
+                }
+            });
+    }
+
+    public void claimWin() {
+        
+        String message = MESSAGE_CLAIM_WIN;
+
+        //Unreliable message is more real time than reliable
+        Games.getRealTimeMultiplayerClient(MultiplayerActivity.this, GoogleSignIn.getLastSignedInAccount(MultiplayerActivity.this))
+                .sendUnreliableMessageToOthers(message.getBytes(), mRoom.getRoomId())
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
@@ -616,10 +639,8 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
-                        gameFragment.handleRoundData(randomDirection, randomDelay);
+                        multiplayerFragment.handleWin();
                     }
                 });
-        }
-
     }
 }

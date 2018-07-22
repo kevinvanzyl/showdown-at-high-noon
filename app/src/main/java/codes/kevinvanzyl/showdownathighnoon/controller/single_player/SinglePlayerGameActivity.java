@@ -279,25 +279,6 @@ public class SinglePlayerGameActivity extends AppCompatActivity implements Senso
         }
     }
 
-    public String getDirectionString(int direction) {
-
-        if (direction == DIRECTION_UP) {
-            return "Up";
-        }
-        else if (direction == DIRECTION_DOWN) {
-            return "Down";
-        }
-        else if (direction == DIRECTION_LEFT) {
-            return "Left";
-        }
-        else if (direction == DIRECTION_RIGHT) {
-            return "Right";
-        }
-        else {
-            return "None";
-        }
-    }
-
     @Override
     public void onSensorChanged(SensorEvent event) {
 
