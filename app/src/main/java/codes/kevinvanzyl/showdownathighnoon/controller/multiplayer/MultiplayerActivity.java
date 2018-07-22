@@ -1,11 +1,9 @@
-package codes.kevinvanzyl.showdownathighnoon.activities.multiplayer;
+package codes.kevinvanzyl.showdownathighnoon.controller.multiplayer;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -14,11 +12,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -26,17 +20,10 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.images.ImageManager;
-import com.google.android.gms.games.AnnotatedData;
-import com.google.android.gms.games.Game;
 import com.google.android.gms.games.Games;
 import com.google.android.gms.games.GamesCallbackStatusCodes;
-import com.google.android.gms.games.GamesClient;
-import com.google.android.gms.games.Player;
-import com.google.android.gms.games.PlayersClient;
 import com.google.android.gms.games.RealTimeMultiplayerClient;
 import com.google.android.gms.games.multiplayer.Participant;
 import com.google.android.gms.games.multiplayer.realtime.OnRealTimeMessageReceivedListener;
@@ -49,17 +36,24 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
-import org.w3c.dom.Text;
-
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.List;
 
 import codes.kevinvanzyl.showdownathighnoon.R;
+
+import static codes.kevinvanzyl.showdownathighnoon.controller.MainActivity.KEY_HOST_DETERMINATION;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
 public class MultiplayerActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener {
+
+    private static final String MESSAGE_AGREE_ON_HOST = "AGREE_ON_HOST";
+    private MultiplayerWaitingRoomFragment waitingRoomFragment;
+    private GameFragment gameFragment;
+
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -73,7 +67,6 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
     private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
 
     private static final int RC_SIGN_IN = 9001;
-    private static final long ROLE_ANY = 0x0; // can play in any match.
 
     /**
      * Some older devices needs a small delay between UI widget updates
@@ -132,13 +125,6 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
         }
     };
 
-    private ImageView imgProfile1;
-    private TextView txtProfile1;
-    private ImageView imgProfile2;
-    private TextView txtProfile2;
-    private TextView txtMeText;
-    private TextView txtOpponentText;
-
     private final Handler countdownHandler = new Handler();
 
     private ProgressBar progressIndicator;
@@ -147,36 +133,51 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
     boolean mPlaying = false;
     final static int MIN_PLAYERS = 2;
 
+    private String mMyPlayerId;
+    private String mMyParticipantId;
+    private String hostParticipantId;
+    private String clientParticipantId;
+
+    private long myButtonClickedTime;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_multiplayer);
 
+        myButtonClickedTime = getIntent().getExtras().getLong(KEY_HOST_DETERMINATION);
+
         mVisible = true;
         mContentView = findViewById(R.id.fullscreen_content);
 
-        imgProfile1 = (ImageView) findViewById(R.id.image_profile_1);
-        txtProfile1 = (TextView) findViewById(R.id.text_profile_1);
-        imgProfile2 = (ImageView) findViewById(R.id.image_profile_2);
-        txtProfile2 = (TextView) findViewById(R.id.text_profile_2);
-        txtMeText = (TextView) findViewById(R.id.text_me_text);
-        txtOpponentText = (TextView) findViewById(R.id.text_opponent_text);
+        waitingRoomFragment = MultiplayerWaitingRoomFragment.newInstance();
+        getSupportFragmentManager().beginTransaction().add(R.id.fullscreen_content, waitingRoomFragment).commit();
 
         progressIndicator = (ProgressBar)findViewById(R.id.progressBar);
         hideProgressIndicator();
 
+        // Set up the user interaction to manually show or hide the system UI.
+        mContentView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                toggle();
+            }
+        });
+    }
+
+    public void silentSignIn() {
         final GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(this,
                 new GoogleSignInOptions.Builder()
-                    .requestScopes(Games.SCOPE_GAMES)
-                    .requestProfile()
-                    .build()
+                        .requestScopes(Games.SCOPE_GAMES)
+                        .requestProfile()
+                        .build()
         );
 
         Task<GoogleSignInAccount> task = googleSignInClient.silentSignIn();
         if (task.isSuccessful()) {
             // There's immediate result available.
             GoogleSignInAccount signInAccount = task.getResult();
-            initSignIn(signInAccount);
+            waitingRoomFragment.initSignIn(signInAccount);
         } else {
             // There's no immediate result ready, displays some progress indicator and waits for the
             // async callback.
@@ -187,7 +188,7 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
                     try {
                         hideProgressIndicator();
                         GoogleSignInAccount signInAccount = (GoogleSignInAccount) task.getResult(ApiException.class);
-                        initSignIn(signInAccount);
+                        waitingRoomFragment.initSignIn(signInAccount);
 
                     } catch (ApiException apiException) {
                         String msg = "";
@@ -218,14 +219,6 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
                 }
             });
         }
-
-        // Set up the user interaction to manually show or hide the system UI.
-        mContentView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                toggle();
-            }
-        });
     }
 
     @Override
@@ -238,7 +231,7 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
             // a listener.
             try {
                 Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-                initSignIn(task.getResult());
+                waitingRoomFragment.initSignIn(task.getResult());
             }
             catch (RuntimeException runtimeException) {
                 runtimeException.printStackTrace();
@@ -256,34 +249,11 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
 
     private void playGame() {
 
-        Intent intent = new Intent(this, MultiplayerGameActivity.class);
-        startActivity(intent);
-        overridePendingTransition(R.animator.slidein_right, R.animator.slideout_right);
+        gameFragment = GameFragment.newInstance(mMyParticipantId, hostParticipantId, clientParticipantId);
+        getSupportFragmentManager().beginTransaction().replace(R.id.fullscreen_content, gameFragment).commit();
     }
 
-    private void initSignIn(GoogleSignInAccount account) {
-
-        imgProfile1.setVisibility(View.VISIBLE);
-        txtProfile1.setVisibility(View.VISIBLE);
-        txtMeText.setVisibility(View.VISIBLE);
-        txtOpponentText.setVisibility(View.VISIBLE);
-
-        PlayersClient playersClient = Games.getPlayersClient(this, account);
-
-        playersClient.getCurrentPlayer().addOnCompleteListener(new OnCompleteListener<Player>() {
-            @Override
-            public void onComplete(@NonNull Task<Player> task) {
-
-                ImageManager manager = ImageManager.create(MultiplayerActivity.this);
-                manager.loadImage(imgProfile1, task.getResult().getIconImageUri());
-
-                txtProfile1.setText(task.getResult().getDisplayName());
-                startQuickGame(ROLE_ANY);
-            }
-        });
-    }
-
-    private void startQuickGame(long role) {
+    public void startQuickGame(long role) {
         // auto-match criteria to invite one random automatch opponent.
         // You can also specify more opponents (up to 3).
         Bundle autoMatchCriteria = RoomConfig.createAutoMatchCriteria(1, 1, role);
@@ -356,19 +326,47 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
         @Override
         public void onRealTimeMessageReceived(@NonNull RealTimeMessage realTimeMessage) {
 
+            String message = null;
+            try {
+                message = new String(realTimeMessage.getMessageData(), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+
+            if (message != null) {
+
+                Log.e(TAG, "onRealTimeMessageReceived: "+message);
+
+                if (message.contains(MESSAGE_AGREE_ON_HOST) && hostParticipantId == null) {
+
+                    String[] strArray = message.split(";");
+
+                    Long buttonClickedTime = Long.parseLong(strArray[1]);
+                    if (myButtonClickedTime < buttonClickedTime) {
+                        hostParticipantId = mMyParticipantId;
+                        clientParticipantId = realTimeMessage.getSenderParticipantId();
+                    }
+                    else {
+                        hostParticipantId = realTimeMessage.getSenderParticipantId();
+                        clientParticipantId = mMyParticipantId;
+                    }
+
+                    Log.e(TAG, "Host has been chosen to be: " + hostParticipantId);
+                    Log.e(TAG, "Client has been chosen to be: " + clientParticipantId);
+                }
+            }
         }
     };
 
-    private String mMyParticipantId;
     RoomStatusUpdateCallback roomStatusUpdateCallback = new RoomStatusUpdateCallback() {
         @Override
         public void onRoomConnecting(@Nullable Room room) {
-            txtOpponentText.setText("Creating game room...");
+            waitingRoomFragment.updateStatus("Creating game room...");
         }
 
         @Override
         public void onRoomAutoMatching(@Nullable Room room) {
-            txtOpponentText.setText("Searching for an opponent...");
+            waitingRoomFragment.updateStatus("Searching for an opponent...");
         }
 
         @Override
@@ -383,7 +381,7 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
 
         @Override
         public void onPeerJoined(@Nullable Room room, @NonNull List<String> list) {
-            txtOpponentText.setText("Player has joined...");
+            waitingRoomFragment.updateStatus("Player has joined...");
         }
 
         @Override
@@ -403,11 +401,50 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
 
             // Connected to room, record the room Id.
             mRoom = room;
+            mMyParticipantId = room.getParticipantId(mMyPlayerId);
             Games.getPlayersClient(MultiplayerActivity.this, GoogleSignIn.getLastSignedInAccount(MultiplayerActivity.this))
                     .getCurrentPlayerId().addOnSuccessListener(new OnSuccessListener<String>() {
                 @Override
                 public void onSuccess(String playerId) {
-                    mMyParticipantId = mRoom.getParticipantId(playerId);
+
+                    if (hostParticipantId == null) {
+
+                        String message = MESSAGE_AGREE_ON_HOST +";"+myButtonClickedTime;
+                        ArrayList<String> participantIds = mRoom.getParticipantIds();
+                        for (String pId: participantIds) {
+
+                            if (!pId.equals(mMyParticipantId)) {
+
+                                Games.getRealTimeMultiplayerClient(MultiplayerActivity.this, GoogleSignIn.getLastSignedInAccount(MultiplayerActivity.this))
+                                        .sendReliableMessage(message.getBytes(), mRoom.getRoomId(), pId, new RealTimeMultiplayerClient.ReliableMessageSentCallback() {
+                                            @Override
+                                            public void onRealTimeMessageSent(int statusCode, int tokenId, String recipientParticipantId) {
+
+                                                Log.d(TAG, "RealTime message sent");
+                                                Log.d(TAG, "  statusCode: " + statusCode);
+                                                Log.d(TAG, "  tokenId: " + tokenId);
+                                                Log.d(TAG, "  recipientParticipantId: " + recipientParticipantId);
+                                            }
+                                        })
+                                        .addOnSuccessListener(new OnSuccessListener<Integer>() {
+                                            @Override
+                                            public void onSuccess(Integer tokenId) {
+                                                Log.d(TAG, "Created a reliable message with tokenId: " + tokenId);
+                                            }
+                                        }).addOnCompleteListener(new OnCompleteListener<Integer>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Integer> task) {
+                                                countdownHandler.postDelayed(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        playGame();
+                                                    }
+                                                }, 3000);
+                                            }
+                                        });
+                            }
+                        }
+                    }
                 }
             });
         }
@@ -436,23 +473,10 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
                 for (String player: list) {
                     Participant p = room.getParticipant(player);
                     if (p != null) {
-                        imgProfile2.setVisibility(View.VISIBLE);
-                        txtProfile2.setVisibility(View.VISIBLE);
 
-                        ImageManager manager = ImageManager.create(MultiplayerActivity.this);
-                        manager.loadImage(imgProfile2, p.getIconImageUri());
-
-                        txtProfile2.setText(p.getDisplayName());
-                        txtOpponentText.setText("Opponent");
+                        waitingRoomFragment.showOpponent(p);
                     }
                 }
-
-                countdownHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        playGame();
-                    }
-                }, 3000);
             }
         }
 
@@ -557,5 +581,9 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         Log.e("KEVIN", "connection failed: "+connectionResult.getErrorMessage());
+    }
+
+    public void setMyPlayerId(String myPlayerId) {
+        this.mMyPlayerId = myPlayerId;
     }
 }

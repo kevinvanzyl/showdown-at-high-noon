@@ -1,8 +1,10 @@
-package codes.kevinvanzyl.showdownathighnoon.activities.multiplayer;
+package codes.kevinvanzyl.showdownathighnoon.controller.single_player;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.CountDownTimer;
 import android.support.v4.content.ContextCompat;
@@ -25,14 +27,7 @@ import codes.kevinvanzyl.showdownathighnoon.R;
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class MultiplayerGameActivity extends AppCompatActivity {
-
-    private static final int DIRECTION_UP = 0;
-    private static final int DIRECTION_DOWN = 1;
-    private static final int DIRECTION_LEFT = 2;
-    private static final int DIRECTION_RIGHT = 3;
-    private static final int DIRECTION_NONE = -1;
-
+public class SinglePlayerGameActivity extends AppCompatActivity implements SensorEventListener {
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -43,14 +38,20 @@ public class MultiplayerGameActivity extends AppCompatActivity {
      * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
      * user interaction before hiding the system UI.
      */
-    private static final int AUTO_HIDE_DELAY_MILLIS = 300;
+    private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
 
     /**
      * Some older devices needs a small delay between UI widget updates
      * and a change of the status and navigation bar.
      */
     private static final int UI_ANIMATION_DELAY = 300;
+    private static final int DIRECTION_UP = 0;
+    private static final int DIRECTION_DOWN = 1;
+    private static final int DIRECTION_LEFT = 2;
+    private static final int DIRECTION_RIGHT = 3;
+    private static final int DIRECTION_NONE = -1;
     private final Handler mHideHandler = new Handler();
+    private final Handler countdownHandler = new Handler();
     private View mContentView;
     private final Runnable mHidePart2Runnable = new Runnable() {
         @SuppressLint("InlinedApi")
@@ -102,12 +103,14 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     };
 
     private TextView txtCountDown;
-    private TextView txtMyScore;
-    private TextView txtOpponentScore;
+    private TextView txtRoundNumber;
+    private TextView txtScore;
     private LinearLayout layoutArrow;
     private ImageView imgArrow;
 
+    private int roundNumber = 0;
     private int currentDirection = DIRECTION_NONE;
+    private int score = 0;
     private float[] mGravity;
     private float[] mGeomagnetic;
     private float azimut;
@@ -118,24 +121,18 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     Sensor accSensor;
     Sensor magSensor;
 
-    private int playerAScore = 0;
-    private int playerBScore = 0;
-    private boolean IAmPlayerA;
-
-    private final Handler countdownHandler = new Handler();
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_multiplayer_game);
+        setContentView(R.layout.activity_single_player_game);
 
         mVisible = true;
         mContentView = findViewById(R.id.fullscreen_content);
 
         txtCountDown = (TextView) findViewById(R.id.text_countdown);
-        txtMyScore = (TextView) findViewById(R.id.text_my_score);
-        txtOpponentScore = (TextView) findViewById(R.id.text_opponent_score);
+        txtRoundNumber = (TextView) findViewById(R.id.text_round_number);
+        txtScore = (TextView) findViewById(R.id.text_score);
 
         layoutArrow = (LinearLayout) findViewById(R.id.layout_image_arrow);
         imgArrow = (ImageView) findViewById(R.id.image_arrow);
@@ -171,20 +168,14 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     }
 
     private void playGame() {
-        if (playerAScore < 10 && playerBScore < 10) {
+        if (roundNumber < 10) {
 
             nextRound();
         }
         else {
             txtCountDown.setVisibility(View.VISIBLE);
             txtCountDown.setTextColor(ContextCompat.getColor(this, R.color.blue_heading));
-
-            if (IAmPlayerA && playerAScore == 10) {
-                txtCountDown.setText("Player A wins!");
-            }
-            else {
-                txtCountDown.setText("Player B wins!");
-            }
+            txtCountDown.setText("Your final score is "+score);
 
             countdownHandler.postDelayed(new Runnable() {
                 @Override
@@ -198,6 +189,9 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     private void nextRound() {
 
         Toast.makeText(this, "Round Started", Toast.LENGTH_SHORT).show();
+
+        roundNumber++;
+        txtRoundNumber.setText(""+roundNumber);
 
         Random r = new Random();
         int random = r.nextInt(9 - 2) + 2; //random number from 2 to 8 inclusive
@@ -214,9 +208,59 @@ public class MultiplayerGameActivity extends AppCompatActivity {
 
                 currentDirection = DIRECTION_NONE;
 
+                new CountDownTimer(1000, 50) {
 
+                    public void onTick(long millisUntilFinished) {
+                        if (currentDirection == randomDirection) {
+                            this.cancel();
+                            roundWon();
+                        }
+                    }
+
+                    public void onFinish() {
+
+                        roundLost();
+                    }
+                }.start();
             }
         }, random*1000);
+    }
+
+    private void roundLost() {
+
+        layoutArrow.setVisibility(View.GONE);
+        imgArrow.setImageDrawable(null);
+
+        txtCountDown.setVisibility(View.VISIBLE);
+        txtCountDown.setTextColor(ContextCompat.getColor(this, R.color.colorAccent));
+        txtCountDown.setText("You Lost!");
+        countdownHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                txtCountDown.setVisibility(View.GONE);
+                playGame();
+            }
+        }, 2000);
+    }
+
+    private void roundWon() {
+
+        score++;
+        txtScore.setText(score+"");
+
+        layoutArrow.setVisibility(View.GONE);
+        imgArrow.setImageDrawable(null);
+
+        txtCountDown.setVisibility(View.VISIBLE);
+        txtCountDown.setTextColor(ContextCompat.getColor(this, R.color.blue_heading));
+        txtCountDown.setText("You Won!");
+        countdownHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                txtCountDown.setVisibility(View.GONE);
+                playGame();
+            }
+        }, 2000);
     }
 
     public int getArrowDrawable(int direction) {
@@ -233,6 +277,87 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         else {
             return R.drawable.ic_arrow_forward_accent_24dp;
         }
+    }
+
+    public String getDirectionString(int direction) {
+
+        if (direction == DIRECTION_UP) {
+            return "Up";
+        }
+        else if (direction == DIRECTION_DOWN) {
+            return "Down";
+        }
+        else if (direction == DIRECTION_LEFT) {
+            return "Left";
+        }
+        else if (direction == DIRECTION_RIGHT) {
+            return "Right";
+        }
+        else {
+            return "None";
+        }
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
+            mGravity = event.values;
+
+        if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
+            mGeomagnetic = event.values;
+
+        if (mGravity != null && mGeomagnetic != null) {
+            float R[] = new float[9];
+            float I[] = new float[9];
+
+            boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
+            if (success) {
+                float orientation[] = new float[3];
+                SensorManager.getOrientation(R, orientation);
+                azimut = orientation[0]; // orientation contains: azimut, pitch and roll
+                pitch = orientation[1];
+                roll = orientation[2];
+            }
+        }
+
+        float x = event.values[0];
+        float y = event.values[1];
+        if (Math.abs(x) > Math.abs(y)) {
+            if (x < 0) {
+
+                if (Math.toDegrees(roll) >= 50) {
+                    currentDirection = DIRECTION_UP;
+                }
+            }
+            if (x > 0) {
+
+                if (Math.toDegrees(roll) <= -50) {
+                    currentDirection = DIRECTION_DOWN;
+                }
+            }
+        } else {
+            if (y < 0) {
+
+                if (Math.toDegrees(pitch) >= 50) {
+                    currentDirection = DIRECTION_LEFT;
+                }
+            }
+            if (y > 0) {
+
+                if (Math.toDegrees(pitch) <= -50) {
+                    currentDirection = DIRECTION_RIGHT;
+                }
+            }
+        }
+        if (x > (-2) && x < (2) && y > (-2) && y < (2)) {
+
+            currentDirection = DIRECTION_NONE;
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor arg0, int arg1) {
     }
 
     @Override
@@ -285,5 +410,18 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     private void delayedHide(int delayMillis) {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        sensorManager.registerListener(SinglePlayerGameActivity.this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(SinglePlayerGameActivity.this, magSensor, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sensorManager.unregisterListener(this);
     }
 }

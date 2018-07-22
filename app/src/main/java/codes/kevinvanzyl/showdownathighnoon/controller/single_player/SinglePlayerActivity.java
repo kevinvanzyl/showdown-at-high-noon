@@ -1,4 +1,4 @@
-package codes.kevinvanzyl.showdownathighnoon.activities.single_player;
+package codes.kevinvanzyl.showdownathighnoon.controller.single_player;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;

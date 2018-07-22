@@ -1,4 +1,4 @@
-package codes.kevinvanzyl.showdownathighnoon.activities;
+package codes.kevinvanzyl.showdownathighnoon.controller;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
@@ -10,9 +10,11 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 
+import java.util.Calendar;
+
 import codes.kevinvanzyl.showdownathighnoon.R;
-import codes.kevinvanzyl.showdownathighnoon.activities.multiplayer.MultiplayerActivity;
-import codes.kevinvanzyl.showdownathighnoon.activities.single_player.SinglePlayerActivity;
+import codes.kevinvanzyl.showdownathighnoon.controller.multiplayer.MultiplayerActivity;
+import codes.kevinvanzyl.showdownathighnoon.controller.single_player.SinglePlayerActivity;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -36,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
      * and a change of the status and navigation bar.
      */
     private static final int UI_ANIMATION_DELAY = 1;
+    public static final String KEY_HOST_DETERMINATION = "KEY_HOST_DETERMINATION";
 
     private View mContentView;
     private Button btnSinglePlayer;
@@ -69,6 +72,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, MultiplayerActivity.class);
+
+                long time = System.currentTimeMillis();
+
+                Bundle b = new Bundle();
+                b.putLong(KEY_HOST_DETERMINATION, time);
+                intent.putExtras(b);
+
                 startActivity(intent);
                 overridePendingTransition(R.animator.slidein_right, R.animator.slideout_right);
             }
