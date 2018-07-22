@@ -28,7 +28,9 @@
                 style="?metaButtonBarButtonStyle"
                 android:background="@color/black_overlay"
                 android:layout_margin="12dp"
-                android:layout_width="match_parent"
+                android:minWidth="200dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/single_player" />
 
@@ -36,11 +38,12 @@
                 style="?metaButtonBarButtonStyle"
                 android:background="@color/black_overlay"
                 android:layout_margin="12dp"
-                android:layout_width="match_parent"
+                android:minWidth="200dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/multiplayer" />
 
     </LinearLayout>
-
 
 </FrameLayout>

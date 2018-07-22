@@ -2,8 +2,10 @@ package codes.kevinvanzyl.showdownathighnoon.activities.multiplayer;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -28,12 +30,14 @@ import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.images.ImageManager;
+import com.google.android.gms.games.AnnotatedData;
 import com.google.android.gms.games.Game;
 import com.google.android.gms.games.Games;
 import com.google.android.gms.games.GamesCallbackStatusCodes;
 import com.google.android.gms.games.GamesClient;
 import com.google.android.gms.games.Player;
 import com.google.android.gms.games.PlayersClient;
+import com.google.android.gms.games.RealTimeMultiplayerClient;
 import com.google.android.gms.games.multiplayer.Participant;
 import com.google.android.gms.games.multiplayer.realtime.OnRealTimeMessageReceivedListener;
 import com.google.android.gms.games.multiplayer.realtime.RealTimeMessage;
@@ -134,14 +138,14 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
     private TextView txtProfile2;
     private TextView txtMeText;
     private TextView txtOpponentText;
-    private Button btnStart;
+
+    private final Handler countdownHandler = new Handler();
 
     private ProgressBar progressIndicator;
     private RoomConfig joinedRoomConfig;
     private Room mRoom;
     boolean mPlaying = false;
     final static int MIN_PLAYERS = 2;
-    private String mMyParticipantId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -157,7 +161,6 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
         txtProfile2 = (TextView) findViewById(R.id.text_profile_2);
         txtMeText = (TextView) findViewById(R.id.text_me_text);
         txtOpponentText = (TextView) findViewById(R.id.text_opponent_text);
-        btnStart = (Button) findViewById(R.id.button_start);
 
         progressIndicator = (ProgressBar)findViewById(R.id.progressBar);
         hideProgressIndicator();
@@ -249,6 +252,13 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
 
     private void showProgressIndicator() {
         progressIndicator.setVisibility(View.VISIBLE);
+    }
+
+    private void playGame() {
+
+        Intent intent = new Intent(this, MultiplayerGameActivity.class);
+        startActivity(intent);
+        overridePendingTransition(R.animator.slidein_right, R.animator.slideout_right);
     }
 
     private void initSignIn(GoogleSignInAccount account) {
@@ -349,6 +359,7 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
         }
     };
 
+    private String mMyParticipantId;
     RoomStatusUpdateCallback roomStatusUpdateCallback = new RoomStatusUpdateCallback() {
         @Override
         public void onRoomConnecting(@Nullable Room room) {
@@ -416,11 +427,32 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
 
         @Override
         public void onPeersConnected(@Nullable Room room, @NonNull List<String> list) {
+
             if (mPlaying) {
                 // add new player to an ongoing game
             } else if (shouldStartGame(room)) {
-                // start game!
-                btnStart.setVisibility(View.VISIBLE);
+                // ready to start game!
+
+                for (String player: list) {
+                    Participant p = room.getParticipant(player);
+                    if (p != null) {
+                        imgProfile2.setVisibility(View.VISIBLE);
+                        txtProfile2.setVisibility(View.VISIBLE);
+
+                        ImageManager manager = ImageManager.create(MultiplayerActivity.this);
+                        manager.loadImage(imgProfile2, p.getIconImageUri());
+
+                        txtProfile2.setText(p.getDisplayName());
+                        txtOpponentText.setText("Opponent");
+                    }
+                }
+
+                countdownHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        playGame();
+                    }
+                }, 3000);
             }
         }
 

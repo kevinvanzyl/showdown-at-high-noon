@@ -19,4 +19,6 @@
     <string name="title_activity_single_player_game">Single Player</string>
     <string name="sign_in_why">You must sign in with your google play account to play multiplayer in real time.</string>
     <string name="signin_other_error">There was an issue with sign in. Please try again later.</string>
+
+    <string name="title_activity_multiplayer_game">MultiplayerGameActivity</string>
 </resources>
