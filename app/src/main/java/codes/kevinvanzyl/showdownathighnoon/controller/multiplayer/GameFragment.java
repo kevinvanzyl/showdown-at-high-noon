@@ -53,6 +53,7 @@ public class GameFragment extends Fragment {
     Sensor accSensor;
     Sensor magSensor;
 
+    private int roundNumber = 0;
     private int playerAScore = 0;
     private int playerBScore = 0;
 
@@ -122,9 +123,7 @@ public class GameFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        if (imHost) {
-            startCountDown();
-        }
+        startCountDown();
     }
 
     private void startCountDown() {
@@ -169,12 +168,21 @@ public class GameFragment extends Fragment {
 
     private void nextRound() {
 
+        roundNumber++;
         Toast.makeText(getActivity(), "Round Started", Toast.LENGTH_SHORT).show();
 
-        Random r = new Random();
-        int random = r.nextInt(9 - 2) + 2; //random number from 2 to 8 inclusive
+        if (imHost) {
+            Random r = new Random();
+            int randomDelay = r.nextInt(9 - 2) + 2; //random number from 2 to 8 inclusive
 
-        final int randomDirection = r.nextInt(4);
+            final int randomDirection = r.nextInt(4);
+
+            ((MultiplayerActivity) getActivity()).sendRoundData(roundNumber, randomDirection, randomDelay);
+        }
+    }
+
+    public void handleRoundData(Integer randomDirection, Integer randomDelay) {
+
         final int arrowDrawable = getArrowDrawable(randomDirection);
 
         countdownHandler.postDelayed(new Runnable() {
@@ -183,12 +191,9 @@ public class GameFragment extends Fragment {
                 layoutArrow.setVisibility(View.VISIBLE);
                 imgArrow.setImageResource(arrowDrawable);
 
-
                 currentDirection = DIRECTION_NONE;
-
-
             }
-        }, random*1000);
+        }, randomDelay*1000);
     }
 
     public int getArrowDrawable(int direction) {

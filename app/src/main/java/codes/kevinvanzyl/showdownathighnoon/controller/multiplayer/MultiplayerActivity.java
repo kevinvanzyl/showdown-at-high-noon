@@ -38,7 +38,10 @@ import com.google.android.gms.tasks.Task;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import codes.kevinvanzyl.showdownathighnoon.R;
 
@@ -51,6 +54,7 @@ import static codes.kevinvanzyl.showdownathighnoon.controller.MainActivity.KEY_H
 public class MultiplayerActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener {
 
     private static final String MESSAGE_AGREE_ON_HOST = "AGREE_ON_HOST";
+    private static final String MESSAGE_ROUND_DATA = "ROUND_DATA";
     private MultiplayerWaitingRoomFragment waitingRoomFragment;
     private GameFragment gameFragment;
 
@@ -354,6 +358,14 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
                     Log.e(TAG, "Host has been chosen to be: " + hostParticipantId);
                     Log.e(TAG, "Client has been chosen to be: " + clientParticipantId);
                 }
+                else if (message.contains(MESSAGE_ROUND_DATA)) {
+
+                    String[] strArray = message.split(";");
+                    int randomDirection = Integer.valueOf(strArray[1]);
+                    int randomDelay = Integer.valueOf(strArray[2]);
+
+                    gameFragment.handleRoundData(randomDirection, randomDelay);
+                }
             }
         }
     };
@@ -585,5 +597,29 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
 
     public void setMyPlayerId(String myPlayerId) {
         this.mMyPlayerId = myPlayerId;
+    }
+
+    public void sendRoundData(int roundNumber, final int randomDirection, final int randomDelay) {
+
+        String message = MESSAGE_ROUND_DATA+";"+randomDirection+";"+randomDelay;
+        ArrayList<String> participantIds = mRoom.getParticipantIds();
+
+        for (String pId: participantIds) {
+            Games.getRealTimeMultiplayerClient(MultiplayerActivity.this, GoogleSignIn.getLastSignedInAccount(MultiplayerActivity.this))
+                .sendUnreliableMessage(message.getBytes(), mRoom.getRoomId(), pId)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "Created a unreliable message");
+                    }
+                })
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        gameFragment.handleRoundData(randomDirection, randomDelay);
+                    }
+                });
+        }
+
     }
 }
