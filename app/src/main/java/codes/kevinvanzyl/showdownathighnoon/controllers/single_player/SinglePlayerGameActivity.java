@@ -108,7 +108,9 @@ public class SinglePlayerGameActivity extends AppCompatActivity {
         new CountDownTimer(4000, 1000) {
 
             public void onTick(long millisUntilFinished) {
-                txtCountDown.setText("" + millisUntilFinished / 1000);
+                if (millisUntilFinished > 1000) {
+                    txtCountDown.setText("" + millisUntilFinished / 1000);
+                }
             }
 
             public void onFinish() {

@@ -71,16 +71,6 @@ public class MultiplayerWaitingRoomFragment extends Fragment {
         ((MultiplayerActivity) getActivity()).silentSignIn();
     }
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-    }
-
     public void initSignIn(GoogleSignInAccount account) {
 
         imgProfile1.setVisibility(View.VISIBLE);

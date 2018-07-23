@@ -46,8 +46,8 @@ import static codes.kevinvanzyl.showdownathighnoon.controllers.MainActivity.KEY_
 
 public class MultiplayerActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener {
 
-    private static final String MESSAGE_AGREE_ON_HOST = "AGREE_ON_HOST";
-    private static final String MESSAGE_ROUND_DATA = "ROUND_DATA";
+    private static final String MESSAGE_AGREE_ON_HOST = "MESSAGE_AGREE_ON_HOST";
+    private static final String MESSAGE_ROUND_DATA = "MESSAGE_ROUND_DATA";
     private static final String MESSAGE_CLAIM_WIN = "MESSAGE_CLAIM_WIN";
     private static final String MESSAGE_CLAIM_LOSS = "MESSAGE_CLAIM_LOSS";
     private MultiplayerWaitingRoomFragment waitingRoomFragment;
@@ -178,6 +178,7 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
                             default:
                                 msg = "Unnown error";
                         }
+                        Log.d(TAG, "silentSignIn failed: "+msg);
 
                         startActivityForResult(googleSignInClient.getSignInIntent(), RC_SIGN_IN);
                     } catch (Throwable throwable) {
@@ -303,7 +304,7 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
 
             if (message != null) {
 
-                Log.e(TAG, "onRealTimeMessageReceived: "+message);
+                Log.d(TAG, "onRealTimeMessageReceived: "+message);
 
                 if (message.contains(MESSAGE_AGREE_ON_HOST) && hostParticipantId == null) {
 
@@ -319,8 +320,8 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
                         clientParticipantId = mMyParticipantId;
                     }
 
-                    Log.e(TAG, "Host has been chosen to be: " + hostParticipantId);
-                    Log.e(TAG, "Client has been chosen to be: " + clientParticipantId);
+                    Log.d(TAG, "Host has been chosen to be: " + hostParticipantId);
+                    Log.d(TAG, "Client has been chosen to be: " + clientParticipantId);
                 }
                 else if (message.contains(MESSAGE_ROUND_DATA)) {
 
@@ -550,7 +551,7 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.e("KEVIN", "connection failed: "+connectionResult.getErrorMessage());
+        Log.e(TAG, "connection failed: "+connectionResult.getErrorMessage());
     }
 
     public void setMyPlayerId(String myPlayerId) {

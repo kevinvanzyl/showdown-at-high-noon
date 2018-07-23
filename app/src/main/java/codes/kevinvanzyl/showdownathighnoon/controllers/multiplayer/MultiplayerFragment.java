@@ -119,10 +119,11 @@ public class MultiplayerFragment extends Fragment {
         myParticipantId = b.getString(MY_PARTICIPANT_ID);
         hostParticipantId = b.getString(HOST_PARTICIPANT_ID);
         clientParticipantId = b.getString(CLIENT_PARTICIPANT_ID);
-        Log.e(TAG, "myParticipantId = "+myParticipantId);
-        Log.e(TAG, "hostParticipantId = "+hostParticipantId);
-        Log.e(TAG, "clientParticipantId = "+clientParticipantId);
+        Log.d(TAG, "myParticipantId = "+myParticipantId);
+        Log.d(TAG, "hostParticipantId = "+hostParticipantId);
+        Log.d(TAG, "clientParticipantId = "+clientParticipantId);
 
+        //Create score board
         Participant me = room.getParticipant(myParticipantId);
         Participant opponent = room.getParticipant( (myParticipantId.equals(hostParticipantId)) ? clientParticipantId : hostParticipantId);
 
@@ -133,6 +134,7 @@ public class MultiplayerFragment extends Fragment {
         manager.loadImage(imgMyProfile, me.getIconImageUri());
         manager.loadImage(imgOpponentProfile, opponent.getIconImageUri());
 
+        //is this device the host device or the client device
         if (myParticipantId.equals(hostParticipantId)) {
             imHost = true;
         }
@@ -152,7 +154,6 @@ public class MultiplayerFragment extends Fragment {
         new CountDownTimer(4000, 1000) {
 
             public void onTick(long millisUntilFinished) {
-                Log.d("HELLOHELLO", millisUntilFinished+"");
                 if (millisUntilFinished > 1000) {
                     txtCountDown.setText("" + millisUntilFinished / 1000);
                 }
@@ -216,16 +217,6 @@ public class MultiplayerFragment extends Fragment {
         else {
             return R.drawable.ic_arrow_forward_accent_24dp;
         }
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
     }
 
     @Override

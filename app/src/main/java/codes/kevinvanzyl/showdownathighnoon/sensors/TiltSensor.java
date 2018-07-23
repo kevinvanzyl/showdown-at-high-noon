@@ -7,10 +7,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
-/**
- * Created by kevin on 2018/07/23.
- */
-
 public class TiltSensor implements SensorEventListener {
 
     public static final int DIRECTION_UP = 0;
