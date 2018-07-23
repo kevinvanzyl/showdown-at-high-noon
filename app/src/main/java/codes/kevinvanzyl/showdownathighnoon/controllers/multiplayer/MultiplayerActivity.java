@@ -561,7 +561,6 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
     public void sendRoundData(int roundNumber, final int randomDirection, final int randomDelay) {
 
         String message = MESSAGE_ROUND_DATA+";"+randomDirection+";"+randomDelay;
-        ArrayList<String> participantIds = mRoom.getParticipantIds();
 
         //Unreliable message is more real time than reliable
         Games.getRealTimeMultiplayerClient(MultiplayerActivity.this, GoogleSignIn.getLastSignedInAccount(MultiplayerActivity.this))
