@@ -37,6 +37,7 @@ public class MultiplayerFragment extends Fragment {
     private static final String MY_PARTICIPANT_ID = "MY_PARTICIPANT_ID";
     private static final String HOST_PARTICIPANT_ID = "HOST_PARTICIPANT_ID";
     private static final String CLIENT_PARTICIPANT_ID = "CLIENT_PARTICIPANT_ID";
+    private static final long TIME_FORFEIT = 10000;
 
     private TextView txtCountDown;
     private TextView txtMyScore;
@@ -58,6 +59,9 @@ public class MultiplayerFragment extends Fragment {
 
     private final Handler countdownHandler = new Handler();
     private Room room;
+
+    private CountDownTimer singleCountDownTimer;
+    private Runnable showArrowRunnable;
 
     public MultiplayerFragment() {
         // Required empty public constructor
@@ -211,32 +215,64 @@ public class MultiplayerFragment extends Fragment {
         tiltSensor.pause();
     }
 
-    public void handleRoundData(final Integer randomDirection, Integer randomDelay) {
+    public void handleRoundData(final Integer randomDirection, final Integer randomDelay) {
 
         final int arrowDrawable = getArrowDrawable(randomDirection);
+        tiltSensor.setCurrentDirection(DIRECTION_NONE);
 
-        countdownHandler.postDelayed(new Runnable() {
+        showArrowRunnable = new Runnable() {
             @Override
             public void run() {
                 layoutArrow.setVisibility(View.VISIBLE);
                 imgArrow.setImageResource(arrowDrawable);
-
-                tiltSensor.setCurrentDirection(DIRECTION_NONE);
-
-                new CountDownTimer(10000, 50) {
-
-                    public void onTick(long millisUntilFinished) {
-                        if (tiltSensor.getCurrentDirection() == randomDirection) {
-                            this.cancel();
-                            claimWin();
-                        }
-                    }
-
-                    public void onFinish() {
-                    }
-                }.start();
             }
-        }, randomDelay*1000);
+        };
+
+        countdownHandler.postDelayed(showArrowRunnable, randomDelay*1000);
+
+        final long totalMillis = TIME_FORFEIT+(randomDelay*1000);
+        singleCountDownTimer = new CountDownTimer(totalMillis, 200) {
+
+            public void onTick(long millisUntilFinished) {
+
+                long passedTime = totalMillis - millisUntilFinished;
+                //Check for premature tilt action
+                if (passedTime < (randomDelay*1000)) {
+                    if (tiltSensor.getCurrentDirection() != DIRECTION_NONE) {
+                        this.cancel();
+                        claimLoss();
+                    }
+                }
+                else {
+                    if (tiltSensor.getCurrentDirection() == randomDirection) {
+                        this.cancel();
+                        claimWin();
+                    }
+                }
+            }
+
+            public void onFinish() {
+                bothLose();
+            }
+        }.start();
+    }
+
+    private void bothLose() {
+
+        singleCountDownTimer.cancel();
+        layoutArrow.setVisibility(View.GONE);
+
+        txtCountDown.setVisibility(View.VISIBLE);
+        txtCountDown.setTextColor(ContextCompat.getColor(getActivity(), R.color.blue_heading));
+
+        txtCountDown.setText("Both lose!");
+        countdownHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                txtCountDown.setVisibility(View.GONE);
+                playGame();
+            }
+        }, 2000);
     }
 
     private void claimWin() {
@@ -244,8 +280,15 @@ public class MultiplayerFragment extends Fragment {
         ((MultiplayerActivity) getActivity()).claimWin();
     }
 
+    private void claimLoss() {
+
+        ((MultiplayerActivity) getActivity()).claimLoss();
+    }
+
     public void handleWin() {
 
+        singleCountDownTimer.cancel();
+        countdownHandler.removeCallbacks(showArrowRunnable);
         myScore++;
         txtMyScore.setText(myScore+"");
         displayWinner(myParticipantId);
@@ -253,6 +296,8 @@ public class MultiplayerFragment extends Fragment {
 
     public void handleLoss() {
 
+        singleCountDownTimer.cancel();
+        countdownHandler.removeCallbacks(showArrowRunnable);
         opponentScore++;
         txtOpponentScore.setText(opponentScore+"");
         displayWinner((imHost) ? clientParticipantId : hostParticipantId);

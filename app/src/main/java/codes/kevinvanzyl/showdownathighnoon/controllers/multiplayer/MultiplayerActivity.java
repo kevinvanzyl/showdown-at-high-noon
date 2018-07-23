@@ -49,6 +49,7 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
     private static final String MESSAGE_AGREE_ON_HOST = "AGREE_ON_HOST";
     private static final String MESSAGE_ROUND_DATA = "ROUND_DATA";
     private static final String MESSAGE_CLAIM_WIN = "MESSAGE_CLAIM_WIN";
+    private static final String MESSAGE_CLAIM_LOSS = "MESSAGE_CLAIM_LOSS";
     private MultiplayerWaitingRoomFragment waitingRoomFragment;
     private MultiplayerFragment multiplayerFragment;
 
@@ -332,6 +333,9 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
                 else if (message.contains(MESSAGE_CLAIM_WIN)) {
                     multiplayerFragment.handleLoss();
                 }
+                else if (message.contains(MESSAGE_CLAIM_LOSS)) {
+                    multiplayerFragment.handleWin();
+                }
             }
         }
     };
@@ -394,32 +398,32 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
                             if (!pId.equals(mMyParticipantId)) {
 
                                 Games.getRealTimeMultiplayerClient(MultiplayerActivity.this, GoogleSignIn.getLastSignedInAccount(MultiplayerActivity.this))
-                                        .sendReliableMessage(message.getBytes(), mRoom.getRoomId(), pId, new RealTimeMultiplayerClient.ReliableMessageSentCallback() {
-                                            @Override
-                                            public void onRealTimeMessageSent(int statusCode, int tokenId, String recipientParticipantId) {
+                                    .sendReliableMessage(message.getBytes(), mRoom.getRoomId(), pId, new RealTimeMultiplayerClient.ReliableMessageSentCallback() {
+                                        @Override
+                                        public void onRealTimeMessageSent(int statusCode, int tokenId, String recipientParticipantId) {
 
-                                                Log.d(TAG, "RealTime message sent");
-                                                Log.d(TAG, "  statusCode: " + statusCode);
-                                                Log.d(TAG, "  tokenId: " + tokenId);
-                                                Log.d(TAG, "  recipientParticipantId: " + recipientParticipantId);
-                                            }
-                                        })
-                                        .addOnSuccessListener(new OnSuccessListener<Integer>() {
-                                            @Override
-                                            public void onSuccess(Integer tokenId) {
-                                                Log.d(TAG, "Created a reliable message with tokenId: " + tokenId);
-                                            }
-                                        }).addOnCompleteListener(new OnCompleteListener<Integer>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<Integer> task) {
-                                                countdownHandler.postDelayed(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        playGame();
-                                                    }
-                                                }, 3000);
-                                            }
-                                        });
+                                            Log.d(TAG, "RealTime message sent");
+                                            Log.d(TAG, "  statusCode: " + statusCode);
+                                            Log.d(TAG, "  tokenId: " + tokenId);
+                                            Log.d(TAG, "  recipientParticipantId: " + recipientParticipantId);
+                                        }
+                                    })
+                                    .addOnSuccessListener(new OnSuccessListener<Integer>() {
+                                        @Override
+                                        public void onSuccess(Integer tokenId) {
+                                            Log.d(TAG, "Created a reliable message with tokenId: " + tokenId);
+                                        }
+                                    }).addOnCompleteListener(new OnCompleteListener<Integer>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Integer> task) {
+                                            countdownHandler.postDelayed(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    playGame();
+                                                }
+                                            }, 3000);
+                                        }
+                                    });
                             }
                         }
                     }
@@ -595,4 +599,25 @@ public class MultiplayerActivity extends AppCompatActivity implements GoogleApiC
                     }
                 });
     }
+    public void claimLoss() {
+
+        String message = MESSAGE_CLAIM_LOSS;
+
+        //Unreliable message is more real time than reliable
+        Games.getRealTimeMultiplayerClient(MultiplayerActivity.this, GoogleSignIn.getLastSignedInAccount(MultiplayerActivity.this))
+                .sendUnreliableMessageToOthers(message.getBytes(), mRoom.getRoomId())
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "Created a unreliable message");
+                    }
+                })
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        multiplayerFragment.handleLoss();
+                    }
+                });
+    }
+
 }

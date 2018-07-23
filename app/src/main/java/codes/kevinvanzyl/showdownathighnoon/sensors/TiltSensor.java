@@ -51,11 +51,11 @@ public class TiltSensor implements SensorEventListener {
 
         switch (event.sensor.getType()) {
             case Sensor.TYPE_ACCELEROMETER:
-                System.arraycopy(event.values, 0, mAcceleration, 0, 3);   // save datas
-                calculateAccMagOrientation(event.values);                       // then calculate new orientation
+                System.arraycopy(event.values, 0, mAcceleration, 0, 3);
+                calculateAccMagOrientation(event.values);
                 break;
             case Sensor.TYPE_MAGNETIC_FIELD:
-                System.arraycopy(event.values, 0, mMagnet, 0, 3);         // save datas
+                System.arraycopy(event.values, 0, mMagnet, 0, 3);
                 break;
             default: break;
         }
