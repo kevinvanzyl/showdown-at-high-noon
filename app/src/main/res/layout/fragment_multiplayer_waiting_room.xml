@@ -21,7 +21,7 @@
 
             <TextView
                 android:id="@+id/text_me_text"
-                android:text="Me"
+                android:text="@string/me"
                 android:visibility="gone"
                 android:layout_marginBottom="12dp"
                 android:textColor="@color/colorAccent"
@@ -67,7 +67,7 @@
 
             <TextView
                 android:id="@+id/text_opponent_text"
-                android:text="Waiting for opponent to join..."
+                android:text="@string/waiting_for_opponent"
                 android:visibility="gone"
                 android:layout_marginBottom="12dp"
                 android:textColor="@color/colorAccent"

@@ -21,4 +21,8 @@
     <string name="signin_other_error">There was an issue with sign in. Please try again later.</string>
 
     <string name="title_activity_multiplayer_game">MultiplayerGameActivity</string>
+    <string name="round">Round:</string>
+    <string name="score">Score:</string>
+    <string name="me">Me</string>
+    <string name="waiting_for_opponent">Waiting for opponent to join...</string>
 </resources>
