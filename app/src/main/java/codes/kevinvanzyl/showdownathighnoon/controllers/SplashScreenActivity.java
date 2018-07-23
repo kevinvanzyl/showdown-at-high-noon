@@ -1,4 +1,4 @@
-package codes.kevinvanzyl.showdownathighnoon.controller;
+package codes.kevinvanzyl.showdownathighnoon.controllers;
 
 import android.content.Intent;
 import android.os.Bundle;

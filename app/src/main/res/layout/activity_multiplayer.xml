@@ -4,7 +4,7 @@
              android:layout_height="match_parent"
              android:background="#0099cc"
              android:id="@+id/fullscreen_content"
-             tools:context="codes.kevinvanzyl.showdownathighnoon.controller.multiplayer.MultiplayerActivity">
+             tools:context="codes.kevinvanzyl.showdownathighnoon.controllers.multiplayer.MultiplayerActivity">
 
     <ProgressBar
         android:id="@+id/progressBar"

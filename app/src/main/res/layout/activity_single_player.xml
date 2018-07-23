@@ -3,7 +3,7 @@
              android:layout_width="match_parent"
              android:layout_height="match_parent"
              android:background="#0099cc"
-             tools:context="codes.kevinvanzyl.showdownathighnoon.controller.single_player.SinglePlayerActivity">
+             tools:context="codes.kevinvanzyl.showdownathighnoon.controllers.single_player.SinglePlayerActivity">
 
     <!-- The primary full-screen view. This can be replaced with whatever view
          is needed to present your content, e.g. VideoView, SurfaceView,
@@ -24,47 +24,28 @@
             android:gravity="center_horizontal"
             android:text="@string/single_player_heading"
             android:textColor="@color/blue_heading"
-            android:textSize="50sp"
+            android:textSize="42sp"
             android:textStyle="bold"/>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
             android:gravity="center"
             android:text="@string/single_player_instructions"
             android:textColor="@color/colorAccent"
-            android:textSize="20sp"
-            android:textStyle="bold"/>
+            android:textSize="18sp"/>
+
+        <Button android:id="@+id/button_begin_game"
+                style="?metaButtonBarButtonStyle"
+                android:background="@color/black_overlay"
+                android:minWidth="200dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/begin_game" />
 
     </LinearLayout>
 
-
-    <!-- This FrameLayout insets its children based on system windows using
-         android:fitsSystemWindows. -->
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
-
-        <LinearLayout
-            android:id="@+id/fullscreen_content_controls"
-            style="?metaButtonBarStyle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center_horizontal"
-            android:background="@color/black_overlay"
-            android:orientation="horizontal"
-            tools:ignore="UselessParent">
-
-            <Button
-                android:id="@+id/button_begin_game"
-                style="?metaButtonBarButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/begin_game"/>
-
-        </LinearLayout>
-    </FrameLayout>
 
 </FrameLayout>

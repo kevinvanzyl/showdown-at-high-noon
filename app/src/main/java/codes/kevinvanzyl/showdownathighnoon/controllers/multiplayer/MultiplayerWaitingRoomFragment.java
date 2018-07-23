@@ -1,7 +1,6 @@
-package codes.kevinvanzyl.showdownathighnoon.controller.multiplayer;
+package codes.kevinvanzyl.showdownathighnoon.controllers.multiplayer;
 
 import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;

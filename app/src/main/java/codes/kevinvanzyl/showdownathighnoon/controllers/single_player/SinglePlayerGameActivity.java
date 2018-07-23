@@ -1,18 +1,12 @@
-package codes.kevinvanzyl.showdownathighnoon.controller.single_player;
+package codes.kevinvanzyl.showdownathighnoon.controllers.single_player;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
+import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.os.Handler;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -22,34 +16,19 @@ import android.widget.Toast;
 import java.util.Random;
 
 import codes.kevinvanzyl.showdownathighnoon.R;
+import codes.kevinvanzyl.showdownathighnoon.sensors.TiltSensor;
 
-/**
- * An example full-screen activity that shows and hides the system UI (i.e.
- * status bar and navigation/system bar) with user interaction.
- */
-public class SinglePlayerGameActivity extends AppCompatActivity implements SensorEventListener {
-    /**
-     * Whether or not the system UI should be auto-hidden after
-     * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
-     */
-    private static final boolean AUTO_HIDE = true;
+import static codes.kevinvanzyl.showdownathighnoon.sensors.TiltSensor.DIRECTION_DOWN;
+import static codes.kevinvanzyl.showdownathighnoon.sensors.TiltSensor.DIRECTION_LEFT;
+import static codes.kevinvanzyl.showdownathighnoon.sensors.TiltSensor.DIRECTION_UP;
 
-    /**
-     * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
-     * user interaction before hiding the system UI.
-     */
-    private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
+public class SinglePlayerGameActivity extends AppCompatActivity {
 
     /**
      * Some older devices needs a small delay between UI widget updates
      * and a change of the status and navigation bar.
      */
     private static final int UI_ANIMATION_DELAY = 300;
-    private static final int DIRECTION_UP = 0;
-    private static final int DIRECTION_DOWN = 1;
-    private static final int DIRECTION_LEFT = 2;
-    private static final int DIRECTION_RIGHT = 3;
-    private static final int DIRECTION_NONE = -1;
     private final Handler mHideHandler = new Handler();
     private final Handler countdownHandler = new Handler();
     private View mContentView;
@@ -81,26 +60,6 @@ public class SinglePlayerGameActivity extends AppCompatActivity implements Senso
         }
     };
     private boolean mVisible;
-    private final Runnable mHideRunnable = new Runnable() {
-        @Override
-        public void run() {
-            hide();
-        }
-    };
-    /**
-     * Touch listener to use for in-layout UI controls to delay hiding the
-     * system UI. This is to prevent the jarring behavior of controls going away
-     * while interacting with activity UI.
-     */
-    private final View.OnTouchListener mDelayHideTouchListener = new View.OnTouchListener() {
-        @Override
-        public boolean onTouch(View view, MotionEvent motionEvent) {
-            if (AUTO_HIDE) {
-                delayedHide(AUTO_HIDE_DELAY_MILLIS);
-            }
-            return false;
-        }
-    };
 
     private TextView txtCountDown;
     private TextView txtRoundNumber;
@@ -109,17 +68,10 @@ public class SinglePlayerGameActivity extends AppCompatActivity implements Senso
     private ImageView imgArrow;
 
     private int roundNumber = 0;
-    private int currentDirection = DIRECTION_NONE;
     private int score = 0;
-    private float[] mGravity;
-    private float[] mGeomagnetic;
-    private float azimut;
-    private float pitch;
-    private float roll;
+    private boolean gameInProgress;
 
-    SensorManager sensorManager;
-    Sensor accSensor;
-    Sensor magSensor;
+    private TiltSensor tiltSensor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -145,10 +97,9 @@ public class SinglePlayerGameActivity extends AppCompatActivity implements Senso
             }
         });
 
-        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        accSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        magSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        tiltSensor = new TiltSensor(this);
 
+        gameInProgress = true;
         startCountDown();
     }
 
@@ -168,7 +119,7 @@ public class SinglePlayerGameActivity extends AppCompatActivity implements Senso
     }
 
     private void playGame() {
-        if (roundNumber < 10) {
+        if (roundNumber < 10 && gameInProgress) {
 
             nextRound();
         }
@@ -206,12 +157,12 @@ public class SinglePlayerGameActivity extends AppCompatActivity implements Senso
                 imgArrow.setImageResource(arrowDrawable);
 
 
-                currentDirection = DIRECTION_NONE;
+                tiltSensor.setCurrentDirection(TiltSensor.DIRECTION_NONE);
 
                 new CountDownTimer(1000, 50) {
 
                     public void onTick(long millisUntilFinished) {
-                        if (currentDirection == randomDirection) {
+                        if (tiltSensor.getCurrentDirection() == randomDirection) {
                             this.cancel();
                             roundWon();
                         }
@@ -280,75 +231,10 @@ public class SinglePlayerGameActivity extends AppCompatActivity implements Senso
     }
 
     @Override
-    public void onSensorChanged(SensorEvent event) {
-
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
-            mGravity = event.values;
-
-        if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
-            mGeomagnetic = event.values;
-
-        if (mGravity != null && mGeomagnetic != null) {
-            float R[] = new float[9];
-            float I[] = new float[9];
-
-            boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
-            if (success) {
-                float orientation[] = new float[3];
-                SensorManager.getOrientation(R, orientation);
-                azimut = orientation[0]; // orientation contains: azimut, pitch and roll
-                pitch = orientation[1];
-                roll = orientation[2];
-            }
-        }
-
-        float x = event.values[0];
-        float y = event.values[1];
-        if (Math.abs(x) > Math.abs(y)) {
-            if (x < 0) {
-
-                if (Math.toDegrees(roll) >= 50) {
-                    currentDirection = DIRECTION_UP;
-                }
-            }
-            if (x > 0) {
-
-                if (Math.toDegrees(roll) <= -50) {
-                    currentDirection = DIRECTION_DOWN;
-                }
-            }
-        } else {
-            if (y < 0) {
-
-                if (Math.toDegrees(pitch) >= 50) {
-                    currentDirection = DIRECTION_LEFT;
-                }
-            }
-            if (y > 0) {
-
-                if (Math.toDegrees(pitch) <= -50) {
-                    currentDirection = DIRECTION_RIGHT;
-                }
-            }
-        }
-        if (x > (-2) && x < (2) && y > (-2) && y < (2)) {
-
-            currentDirection = DIRECTION_NONE;
-        }
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor arg0, int arg1) {
-    }
-
-    @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
 
-        // Trigger the initial hide() shortly after the activity has been
-        // created, to briefly hint to the user that UI controls
-        // are available.
-        delayedHide(100);
+        hide();
     }
 
     private void toggle() {
@@ -384,25 +270,16 @@ public class SinglePlayerGameActivity extends AppCompatActivity implements Senso
         mHideHandler.postDelayed(mShowPart2Runnable, UI_ANIMATION_DELAY);
     }
 
-    /**
-     * Schedules a call to hide() in delay milliseconds, canceling any
-     * previously scheduled calls.
-     */
-    private void delayedHide(int delayMillis) {
-        mHideHandler.removeCallbacks(mHideRunnable);
-        mHideHandler.postDelayed(mHideRunnable, delayMillis);
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
-        sensorManager.registerListener(SinglePlayerGameActivity.this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener(SinglePlayerGameActivity.this, magSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        tiltSensor.resume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        sensorManager.unregisterListener(this);
+        gameInProgress = false;
+        tiltSensor.pause();
     }
 }
