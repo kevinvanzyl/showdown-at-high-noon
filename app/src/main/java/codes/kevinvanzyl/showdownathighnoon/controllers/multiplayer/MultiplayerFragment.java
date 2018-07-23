@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.support.annotation.Dimension;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -16,8 +17,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.images.ImageManager;
 import com.google.android.gms.games.multiplayer.Participant;
 import com.google.android.gms.games.multiplayer.realtime.Room;
+
+import org.w3c.dom.Text;
 
 import java.util.Random;
 
@@ -40,8 +44,14 @@ public class MultiplayerFragment extends Fragment {
     private static final long TIME_FORFEIT = 10000;
 
     private TextView txtCountDown;
+
     private TextView txtMyScore;
     private TextView txtOpponentScore;
+    private TextView txtMyName;
+    private TextView txtOpponentName;
+    private ImageView imgMyProfile;
+    private ImageView imgOpponentProfile;
+
     private LinearLayout layoutArrow;
     private ImageView imgArrow;
 
@@ -93,8 +103,13 @@ public class MultiplayerFragment extends Fragment {
         tiltSensor = new TiltSensor(getActivity());
 
         txtCountDown = (TextView) v.findViewById(R.id.text_countdown);
+
         txtMyScore = (TextView) v.findViewById(R.id.text_my_score);
         txtOpponentScore = (TextView) v.findViewById(R.id.text_opponent_score);
+        txtMyName = (TextView) v.findViewById(R.id.text_my_name);
+        txtOpponentName = (TextView) v.findViewById(R.id.text_opponent_name);
+        imgMyProfile = (ImageView) v.findViewById(R.id.img_my_profile);
+        imgOpponentProfile = (ImageView) v.findViewById(R.id.img_opponent_profile);
 
         layoutArrow = (LinearLayout) v.findViewById(R.id.layout_image_arrow);
         imgArrow = (ImageView) v.findViewById(R.id.image_arrow);
@@ -107,6 +122,16 @@ public class MultiplayerFragment extends Fragment {
         Log.e(TAG, "myParticipantId = "+myParticipantId);
         Log.e(TAG, "hostParticipantId = "+hostParticipantId);
         Log.e(TAG, "clientParticipantId = "+clientParticipantId);
+
+        Participant me = room.getParticipant(myParticipantId);
+        Participant opponent = room.getParticipant( (myParticipantId.equals(hostParticipantId)) ? clientParticipantId : hostParticipantId);
+
+        txtMyName.setText(me.getDisplayName());
+        txtOpponentName.setText(opponent.getDisplayName());
+
+        ImageManager manager = ImageManager.create(getActivity());
+        manager.loadImage(imgMyProfile, me.getIconImageUri());
+        manager.loadImage(imgOpponentProfile, opponent.getIconImageUri());
 
         if (myParticipantId.equals(hostParticipantId)) {
             imHost = true;
@@ -127,11 +152,15 @@ public class MultiplayerFragment extends Fragment {
         new CountDownTimer(4000, 1000) {
 
             public void onTick(long millisUntilFinished) {
-                txtCountDown.setText("" + millisUntilFinished / 1000);
+                Log.d("HELLOHELLO", millisUntilFinished+"");
+                if (millisUntilFinished > 1000) {
+                    txtCountDown.setText("" + millisUntilFinished / 1000);
+                }
             }
 
             public void onFinish() {
                 txtCountDown.setVisibility(View.GONE);
+                txtCountDown.setTextSize(Dimension.SP, 38f);
                 playGame();
             }
         }.start();
@@ -146,12 +175,8 @@ public class MultiplayerFragment extends Fragment {
             txtCountDown.setVisibility(View.VISIBLE);
             txtCountDown.setTextColor(ContextCompat.getColor(getActivity(), R.color.blue_heading));
 
-            if (imHost && myScore == 10) {
-                txtCountDown.setText("Player A wins!");
-            }
-            else {
-                txtCountDown.setText("Player B wins!");
-            }
+            Participant participant = room.getParticipant( (imHost && myScore == 10) ? hostParticipantId : clientParticipantId);
+            txtCountDown.setText(participant.getDisplayName()+" wins!");
 
             countdownHandler.postDelayed(new Runnable() {
                 @Override
@@ -291,7 +316,7 @@ public class MultiplayerFragment extends Fragment {
         countdownHandler.removeCallbacks(showArrowRunnable);
         myScore++;
         txtMyScore.setText(myScore+"");
-        displayWinner(myParticipantId);
+        displayWinner((imHost) ? hostParticipantId : clientParticipantId);
     }
 
     public void handleLoss() {
