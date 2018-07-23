@@ -14,8 +14,8 @@ android {
         applicationId "codes.kevinvanzyl.showdownathighnoon"
         minSdkVersion 17
         targetSdkVersion 26
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "1.1"
         vectorDrawables.useSupportLibrary = true
     }
     buildTypes {
